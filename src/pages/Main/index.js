@@ -1,17 +1,19 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 
-import { FaGithubAlt, FaPlus, FaSpinner } from 'react-icons/fa';
+import { FaGithubAlt, FaSpinner, FaSearch } from 'react-icons/fa';
 import api from '../../services/api';
 
 import Container from '../../components/Container';
-import { Form, SubmitButton, List } from './styles';
+import { Form, Button, List, SearchResultList } from './styles';
 
 export default class Main extends Component {
   state = {
-    newRepo: '',
+    searchRepo: '',
+    searchResultRepos: [],
     repositories: [],
     loading: false,
+    inputError: false,
   };
 
   componentDidMount() {
@@ -30,47 +32,106 @@ export default class Main extends Component {
   }
 
   handleInputChange = e => {
-    this.setState({ newRepo: e.target.value });
+    this.setState({ searchRepo: e.target.value, inputError: false });
   };
 
-  handleSubmit = async e => {
-    e.preventDefault();
-    this.setState({ loading: true });
-    const { newRepo, repositories } = this.state;
-    const response = await api.get(`/repos/${newRepo}`);
-    const data = {
-      name: response.data.full_name,
-    };
-    this.setState({
-      repositories: [...repositories, data],
-      newRepo: '',
-      loading: false,
-    });
+  handleAddRepo = repoId => {
+    try {
+      this.setState({ loading: true });
+      const { repositories, searchResultRepos } = this.state;
+      const repo = searchResultRepos.find(r => r.id === repoId);
+      const data = {
+        name: repo.full_name,
+      };
+      const existRepo = repositories.find(r => r.name === data.name);
+      if (existRepo) {
+        throw String('Repositório duplicado');
+      }
+      this.setState({
+        repositories: [...repositories, data],
+        searchRepo: '',
+        searchResultRepos: [],
+      });
+    } catch (error) {
+      this.setState({
+        inputError: true,
+      });
+    } finally {
+      this.setState({ loading: false });
+    }
+  };
+
+  handleSearch = async e => {
+    try {
+      e.preventDefault();
+      this.setState({ loading: true });
+      const { searchRepo } = this.state;
+      if (!searchRepo) {
+        throw String('O campo de pesquisa esta vazio.');
+      }
+      const response = await api.get('/search/repositories', {
+        params: {
+          q: searchRepo,
+          per_page: 10,
+        },
+      });
+      this.setState({
+        searchResultRepos: [...response.data.items],
+      });
+    } catch (error) {
+      this.setState({
+        inputError: true,
+      });
+    } finally {
+      this.setState({
+        loading: false,
+      });
+    }
   };
 
   render() {
-    const { newRepo, repositories, loading } = this.state;
+    const {
+      repositories,
+      loading,
+      searchResultRepos,
+      searchRepo,
+      inputError,
+    } = this.state;
     return (
       <Container>
         <h1>
           <FaGithubAlt />
-          Repositórios
+          Meus Repositórios Favoritos
         </h1>
-        <Form onSubmit={this.handleSubmit}>
+        <Form onSubmit={this.handleSearch} inputError={inputError}>
           <input
             type="text"
-            placeholder="Adicionar Repositório"
-            value={newRepo}
+            placeholder="Buscar Repositório"
+            value={searchRepo}
             onChange={this.handleInputChange}
           />
-          <SubmitButton loading={loading}>
+          <Button type="submit" loading={loading}>
             {loading ? (
               <FaSpinner color="#FFF" size={14} />
             ) : (
-              <FaPlus color="#FFF" size={14} />
+              <FaSearch color="#FFF" size={14} />
             )}
-          </SubmitButton>
+          </Button>
         </Form>
+        {searchResultRepos.length > 0 && (
+          <SearchResultList>
+            {searchResultRepos.map(repo => (
+              <li key={String(repo.id)}>
+                <button
+                  type="button"
+                  onClick={() => this.handleAddRepo(repo.id)}
+                >
+                  <span>{repo.full_name}</span>
+                </button>
+              </li>
+            ))}
+          </SearchResultList>
+        )}
         <List>
           {repositories.map(repository => (
             <li key={repository.name}>

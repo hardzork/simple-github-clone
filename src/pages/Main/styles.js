@@ -28,6 +28,11 @@ export const Form = styled.form`
     padding: 10px 15px;
     border-radius: 4px;
     font-size: 16px;
+    ${props =>
+      props.inputError &&
+      css`
+        border-color: red;
+      `}
   }
 `;
 
@@ -36,8 +41,8 @@ const rotate = keyframes`
   to {transform: rotate(360deg);}
 `;
 
-export const SubmitButton = styled.button.attrs(props => ({
-  type: 'submit',
+export const Button = styled.button.attrs(props => ({
+  type: props.type,
   disabled: props.loading,
 }))`
   background: #7159c1;
@@ -59,6 +64,29 @@ export const SubmitButton = styled.button.attrs(props => ({
         animation: ${rotate} 2s linear infinite;
       }
     `}
+`;
+
+export const SearchResultList = styled.ul`
+  list-style: none;
+  margin-top: 10px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 10px;
+  li {
+    padding: 10px 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    & + li {
+      border-top: 1px solid #eee;
+    }
+    button {
+      padding: 0;
+      border: 0;
+      background: none;
+    }
+  }
 `;
 
 export const List = styled.ul`
