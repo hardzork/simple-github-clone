@@ -2,7 +2,7 @@
 
 Hardzork's GoStack 7.0 Challenge 05
 
-This project uses React concepts such as PropTypes, Web Components, Styled Components and States. It aldo uses the Github API to list repositories and their issues.
+This project uses React concepts such as PropTypes, Web Components, Styled Components and States. It also uses the Github API to list repositories and their issues.
 
 ## Challenge description
 
