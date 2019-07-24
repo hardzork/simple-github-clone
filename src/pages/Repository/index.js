@@ -1,10 +1,19 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
+
+import { FaCaretLeft, FaCaretRight } from 'react-icons/fa';
+import { GoIssueOpened, GoIssueClosed, GoGlobe } from 'react-icons/go';
 import api from '../../services/api';
 
 import Container from '../../components/Container';
-import { Loading, Owner, IssueList } from './styles';
+import {
+  Loading,
+  Owner,
+  IssueList,
+  IssuePagination,
+  IssueFilter,
+} from './styles';
 
 export default class Repository extends Component {
   static propTypes = {
@@ -42,6 +51,23 @@ export default class Repository extends Component {
     });
   }
 
+  handleFilter = async type => {
+    const { match } = this.props;
+
+    const repoName = decodeURIComponent(match.params.repository);
+
+    const issues = await api.get(`/repos/${repoName}/issues`, {
+      params: {
+        state: type,
+        per_page: 5,
+      },
+    });
+
+    this.setState({
+      issues: issues.data,
+    });
+  };
+
   render() {
     const { repository, issues, loading } = this.state;
 
@@ -57,6 +83,20 @@ export default class Repository extends Component {
           <h1>{repository.name}</h1>
           <p>{repository.description}</p>
         </Owner>
+        <IssueFilter>
+          <button type="button" onClick={() => this.handleFilter('all')}>
+            <GoGlobe size={30} />
+            <span>Todas as issues</span>
+          </button>
+          <button type="button" onClick={() => this.handleFilter('open')}>
+            <GoIssueOpened size={30} />
+            <span>Issues abertas</span>
+          </button>
+          <button type="button" onClick={() => this.handleFilter('closed')}>
+            <GoIssueClosed size={30} />
+            <span>Issues fechadas</span>
+          </button>
+        </IssueFilter>
         <IssueList>
           {issues.map(issue => (
             <li key={String(issue.id)}>
@@ -73,6 +113,14 @@ export default class Repository extends Component {
             </li>
           ))}
         </IssueList>
+        <IssuePagination>
+          <button type="button">
+            <FaCaretLeft /> Anterior
+          </button>
+          <button type="button">
+            Próxima <FaCaretRight />
+          </button>
+        </IssuePagination>
       </Container>
     );
   }

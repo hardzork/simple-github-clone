@@ -97,3 +97,28 @@ export const IssueList = styled.ul`
     }
   }
 `;
+
+export const IssuePagination = styled.div``;
+
+export const IssueFilter = styled.div`
+  margin-top: 15px;
+  align-content: center;
+  justify-content: center;
+  display: flex;
+  button {
+    padding: 0;
+    border: 0;
+    background: none;
+    display: flex;
+    align-items: center;
+    span {
+      margin: 0 5px;
+    }
+    &:hover {
+      color: #7159c1;
+    }
+    &:active {
+      color: #333;
+    }
+  }
+`;
