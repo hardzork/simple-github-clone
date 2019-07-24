@@ -98,7 +98,24 @@ export const IssueList = styled.ul`
   }
 `;
 
-export const IssuePagination = styled.div``;
+export const IssuePagination = styled.div`
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  button {
+    outline: 0;
+    border: 0;
+    padding: 5px;
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    &:hover:not([disabled]) {
+      color: #7159c1;
+    }
+  }
+`;
 
 export const IssueFilter = styled.div`
   margin-top: 15px;
@@ -117,8 +134,8 @@ export const IssueFilter = styled.div`
     &:hover {
       color: #7159c1;
     }
-    &:active {
-      color: #333;
-    }
+  }
+  & > #${props => props.filterActive} {
+    color: #7159c1;
   }
 `;

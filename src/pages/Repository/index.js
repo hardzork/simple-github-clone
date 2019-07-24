@@ -28,13 +28,13 @@ export default class Repository extends Component {
     repository: {},
     issues: [],
     loading: true,
+    filterActive: 'open',
+    page: 1,
   };
 
   async componentDidMount() {
     const { match } = this.props;
-
     const repoName = decodeURIComponent(match.params.repository);
-
     const [repository, issues] = await Promise.all([
       api.get(`/repos/${repoName}`),
       api.get(`/repos/${repoName}/issues`, {
@@ -48,28 +48,40 @@ export default class Repository extends Component {
       repository: repository.data,
       issues: issues.data,
       loading: false,
+      filterActive: 'open',
     });
   }
 
-  handleFilter = async type => {
+  handleFilter = async (type, isFilter) => {
     const { match } = this.props;
-
+    const { page } = this.state;
     const repoName = decodeURIComponent(match.params.repository);
-
     const issues = await api.get(`/repos/${repoName}/issues`, {
       params: {
         state: type,
         per_page: 5,
+        page: isFilter ? 1 : page,
       },
     });
-
     this.setState({
       issues: issues.data,
+      filterActive: type,
     });
+    if (isFilter) {
+      this.setState({ page: 1 });
+    }
+  };
+
+  handlePagination = async act => {
+    const { page, filterActive } = this.state;
+    await this.setState({
+      page: act === 'next' ? page + 1 : page - 1,
+    });
+    this.handleFilter(filterActive, false);
   };
 
   render() {
-    const { repository, issues, loading } = this.state;
+    const { repository, issues, loading, filterActive, page } = this.state;
 
     if (loading) {
       return <Loading>Carregando</Loading>;
@@ -83,16 +95,28 @@ export default class Repository extends Component {
           <h1>{repository.name}</h1>
           <p>{repository.description}</p>
         </Owner>
-        <IssueFilter>
-          <button type="button" onClick={() => this.handleFilter('all')}>
+        <IssueFilter filterActive={filterActive}>
+          <button
+            id="all"
+            type="button"
+            onClick={() => this.handleFilter('all', true)}
+          >
             <GoGlobe size={30} />
             <span>Todas as issues</span>
           </button>
-          <button type="button" onClick={() => this.handleFilter('open')}>
+          <button
+            id="open"
+            type="button"
+            onClick={() => this.handleFilter('open', true)}
+          >
             <GoIssueOpened size={30} />
             <span>Issues abertas</span>
           </button>
-          <button type="button" onClick={() => this.handleFilter('closed')}>
+          <button
+            id="closed"
+            type="button"
+            onClick={() => this.handleFilter('closed', true)}
+          >
             <GoIssueClosed size={30} />
             <span>Issues fechadas</span>
           </button>
@@ -103,7 +127,13 @@ export default class Repository extends Component {
               <img src={issue.user.avatar_url} alt={issue.user.login} />
               <div>
                 <strong>
-                  <a href={issue.html_url}>{issue.title}</a>
+                  <a
+                    rel="noopener noreferrer"
+                    target="_blank"
+                    href={issue.html_url}
+                  >
+                    {issue.title}
+                  </a>
                   {issue.labels.map(label => (
                     <span key={String(label.id)}>{label.name}</span>
                   ))}
@@ -114,10 +144,15 @@ export default class Repository extends Component {
           ))}
         </IssueList>
         <IssuePagination>
-          <button type="button">
+          <button
+            disabled={page === 1}
+            type="button"
+            onClick={() => this.handlePagination('back')}
+          >
             <FaCaretLeft /> Anterior
           </button>
-          <button type="button">
+          <span>{page}</span>
+          <button type="button" onClick={() => this.handlePagination('next')}>
             Próxima <FaCaretRight />
           </button>
         </IssuePagination>
